@@ -1,7 +1,6 @@
 #include "kernel/types.h"
 #include "kernel/stat.h"
 #include "user/user.h"
-#include "kernel/pstat.h"  // for struct rusage
 
 int
 main(int argc, char *argv[])
@@ -11,7 +10,7 @@ main(int argc, char *argv[])
     exit(1);
   }
 
-  int start = uptime();  // record start ticks
+  int start = uptime();   // record time before running the command
   int pid = fork();
 
   if (pid < 0) {
@@ -20,26 +19,18 @@ main(int argc, char *argv[])
   }
 
   if (pid == 0) {
-    //child
+    // child
     exec(argv[1], argv + 1);
     fprintf(2, "time1: exec %s failed\n", argv[1]);
     exit(1);
   }
 
-  // Parent  wait for child using wait2()
-  int status;
-  struct rusage ru;
+  // parent wait for child to finish
+  wait(0);
 
-  wait2(&status, &ru); // new syscall that gives CPU time
-
-  int end = uptime();  // record end ticks
-
+  int end = uptime();     // record time after child finishes
   int elapsed = end - start;
-  int cpu = ru.cputime;
-  int percent = (elapsed == 0) ? 0 : (cpu *  100) / elapsed;
 
-  printf("elapsed time: %d ticks, cpu time: %d ticks, %d%% CPU\n",
-         elapsed, cpu, percent);
-
+  printf("elapsed time: %d ticks\n", elapsed);
   exit(0);
 }

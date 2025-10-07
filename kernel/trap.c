@@ -82,14 +82,14 @@ usertrap(void)
   // give up the CPU if this is a timer interrupt.
   if(which_dev == 2){
 
-    if(myproc() != 0){
-       myproc()->cputime +=1 ; //Increment cputime ADDED BY MEEEE
+    if(p != 0){
+       p->cputime +=1 ; //Increment cputime ADDED BY MEEEE
       
     }
     yield();
   }
 
-
+  
   usertrapret();
 }
 
