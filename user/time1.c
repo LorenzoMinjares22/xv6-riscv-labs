@@ -5,6 +5,10 @@
 int
 main(int argc, char *argv[]){
 			
+	if(argc < 2){
+		fprintf(2, "Usage: time1 command [args..]\n");
+		exit(1);
+	}
 	
 	int start = uptime();
 	
