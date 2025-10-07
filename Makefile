@@ -132,6 +132,9 @@ UPROGS=\
 	$U/_grind\
 	$U/_wc\
 	$U/_uptime\
+	$U/_time1\
+	$U/_sleep\
+	$U/_matmul\
 	$U/_zombie\
 
 fs.img: mkfs/mkfs README $(UPROGS)

@@ -5,6 +5,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "pstat.h"
 
 struct cpu cpus[NCPU];
 
@@ -425,6 +426,65 @@ wait(uint64 addr)
     
     // Wait for a child to exit.
     sleep(p, &wait_lock);  //DOC: wait-sleep
+  }
+}
+
+
+//wait2 for homework 2
+int
+wait2(uint64 ustatus, uint64 urusage)
+{
+  struct proc *p = myproc();
+  int havekids, pid;
+
+  acquire(&wait_lock);
+  for(;;){
+    havekids = 0;
+    for(struct proc *pp = proc; pp < &proc[NPROC]; pp++){
+      if(pp->parent == p){
+        havekids = 1;
+        acquire(&pp->lock);
+        if(pp->state == ZOMBIE){
+          // child is done
+          pid = pp->pid;
+
+          // write child's exit status to *ustatus (if parent gave a pointer)
+          if(ustatus != 0){
+            if(copyout(p->pagetable, ustatus, (char *)&pp->xstate, sizeof(pp->xstate)) < 0){
+              release(&pp->lock);
+              release(&wait_lock);
+              return -1;
+            }
+          }
+
+          // write child's rusage (cputime)
+          if(urusage != 0){
+            struct rusage ru;
+            ru.cputime = pp->cputime;
+            if(copyout(p->pagetable, urusage, (char *)&ru, sizeof(ru)) < 0){
+              release(&pp->lock);
+              release(&wait_lock);
+              return -1;
+            }
+          }
+
+          // free child and return pid (same as wait)
+          freeproc(pp);
+          release(&pp->lock);
+          release(&wait_lock);
+          return pid;
+        }
+        release(&pp->lock);
+      }
+    }
+
+    if(!havekids || p->killed){
+      release(&wait_lock);
+      return -1;
+    }
+
+    // sleep until a child changes state
+    sleep(p, &wait_lock);
   }
 }
 
