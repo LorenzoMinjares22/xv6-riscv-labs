@@ -268,6 +268,24 @@ growproc(int n)
   return 0;
 }
 
+//hw3 get priotity
+
+int
+getpriority(void)
+{
+   struct proc *p = myproc();
+   return p->priority;    
+}
+
+void
+setpriority(uint costum_priority)
+{
+  struct proc *p = myproc();
+  p->priority = costum_priority;
+
+}
+
+
 // Create a new process, copying the parent.
 // Sets up child kernel stack to return as if from fork() system call.
 int
@@ -674,6 +692,7 @@ procinfo(uint64 addr)
     procinfo.pid = p->pid;
     procinfo.state = p->state;
     procinfo.size = p->sz;
+    procinfo.priority = p->priority;
     if (p->parent)
       procinfo.ppid = (p->parent)->pid;
     else
