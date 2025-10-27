@@ -108,3 +108,44 @@ sys_getprocs(void)
   return(procinfo(addr));
 }
 
+uint64
+sys_getpriority(void)
+{
+   int pid;
+   if(argint(0,&pid) < 0 ) return -1;
+ 
+   struct proc *p;
+   int prio = -1;
+
+   //scan proc table
+   for(p = proc; p < &proc[NPROC]; p++){
+      acquire(&p->lock);
+
+      if(p->pid = pid){
+         prio = p->priority;
+         release(&p->lock);
+         break;
+       }
+
+      release(&p->lock);
+    }
+ 
+   return prio;
+}
+
+uint64
+sys_setpriority(void)
+{
+
+   int prio;
+   if(argint(0, &prio) < 0) return -1;
+   if(prio < 0 || prio > MAXPRIO) return -1;
+
+   struct proc *p = myproc();
+   acquire(&p->lock);
+   int old = p->priority;
+   p->priority = prio;
+   release(&p->lock);
+
+   return old;  //old prio for testing
+}
