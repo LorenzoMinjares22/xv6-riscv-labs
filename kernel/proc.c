@@ -106,6 +106,7 @@ static struct proc*
 allocproc(void)
 {
   struct proc *p;
+  p->priority = DEFAULT_PRIO;
 
   for(p = proc; p < &proc[NPROC]; p++) {
     acquire(&p->lock);
@@ -227,7 +228,7 @@ void
 userinit(void)
 {
   struct proc *p;
-
+  p->priority = DEFAULT_PRIO; //hw3
   p = allocproc();
   initproc = p;
   
@@ -268,6 +269,7 @@ growproc(int n)
   return 0;
 }
 
+<<<<<<< HEAD
 //hw3 get priotity
 
 int
@@ -284,6 +286,9 @@ setpriority(uint costum_priority)
   p->priority = costum_priority;
 
 }
+=======
+
+>>>>>>> 79a241dffd9bf0bdbe2b5b025a70836189aa00a8
 
 
 // Create a new process, copying the parent.
@@ -294,6 +299,7 @@ fork(void)
   int i, pid;
   struct proc *np;
   struct proc *p = myproc();
+ 
 
   // Allocate process.
   if((np = allocproc()) == 0){
@@ -307,6 +313,7 @@ fork(void)
     return -1;
   }
   np->sz = p->sz;
+  np->priority = p->priority; //child inheariths parent priority hw3
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
