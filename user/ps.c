@@ -19,7 +19,7 @@ int main(int argc, char **argv)
     if (nprocs < 0)
         exit(-1);
 
-    printf("pid\tstate\t\tsize\tppid\tname\n");
+    printf("pid\tstate\t\tsize\tppid\tname\tpriority\n");
     for (i = 0; i < nprocs; i++)
     {
         state = states[uproc[i].state];

@@ -106,7 +106,7 @@ static struct proc*
 allocproc(void)
 {
   struct proc *p;
-  p->priority = DEFAULT_PRIO;
+  
 
   for(p = proc; p < &proc[NPROC]; p++) {
     acquire(&p->lock);
@@ -121,6 +121,8 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+  
+  p->priority = DEFAULT_PRIO;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -228,8 +230,8 @@ void
 userinit(void)
 {
   struct proc *p;
-  p->priority = DEFAULT_PRIO; //hw3
   p = allocproc();
+  p->priority = DEFAULT_PRIO; //hw3
   initproc = p;
   
   // allocate one user page and copy init's instructions
@@ -268,27 +270,6 @@ growproc(int n)
   p->sz = sz;
   return 0;
 }
-
-<<<<<<< HEAD
-//hw3 get priotity
-
-int
-getpriority(void)
-{
-   struct proc *p = myproc();
-   return p->priority;    
-}
-
-void
-setpriority(uint costum_priority)
-{
-  struct proc *p = myproc();
-  p->priority = costum_priority;
-
-}
-=======
-
->>>>>>> 79a241dffd9bf0bdbe2b5b025a70836189aa00a8
 
 
 // Create a new process, copying the parent.

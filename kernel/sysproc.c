@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
+extern struct proc proc[];
 
 uint64
 sys_exit(void)
@@ -111,26 +112,20 @@ sys_getprocs(void)
 uint64
 sys_getpriority(void)
 {
-   int pid;
-   if(argint(0,&pid) < 0 ) return -1;
- 
-   struct proc *p;
-   int prio = -1;
+  struct proc *p = myproc();
+  int prio;
 
-   //scan proc table
-   for(p = proc; p < &proc[NPROC]; p++){
-      acquire(&p->lock);
 
-      if(p->pid = pid){
-         prio = p->priority;
-         release(&p->lock);
-         break;
-       }
 
-      release(&p->lock);
-    }
- 
-   return prio;
+  acquire(&p->lock);
+
+  prio = p->priority;
+
+  release(&p->lock);
+
+
+
+  return prio;
 }
 
 uint64

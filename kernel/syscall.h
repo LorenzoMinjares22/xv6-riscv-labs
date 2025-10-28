@@ -21,10 +21,6 @@
 #define SYS_mkdir  20
 #define SYS_close  21
 #define SYS_getprocs 22 //hw3 getprocs
-<<<<<<< HEAD
-#define SYS_getpriority 23
-#define SYS_setpriority 24
-=======
 #define SYS_getpriority 23 //hw3
 #define SYS_setpriority 24 //hw3
->>>>>>> 79a241dffd9bf0bdbe2b5b025a70836189aa00a8
+
