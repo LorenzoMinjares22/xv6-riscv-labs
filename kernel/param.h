@@ -13,4 +13,7 @@
 #define MAXPATH      128   // maximum file path name
 #define MAXPRIO      40    // maximum amount of priority a process can have hw3
 #define DEFAULT_PRIO 0   // priority defult value hw3
+#define SCHED_POLICY_RR    0
+#define SCHED_POLICY_PRIO  1
+#define SCHED_POLICY SCHED_POLICY_PRIO
 //enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };

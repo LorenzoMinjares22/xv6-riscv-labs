@@ -444,32 +444,56 @@ wait(uint64 addr)
 void
 scheduler(void)
 {
-  struct proc *p;
   struct cpu *c = mycpu();
-  
   c->proc = 0;
-  for(;;){
-    // Avoid deadlock by ensuring that devices can interrupt.
+
+  for (;;) {
     intr_on();
 
-    for(p = proc; p < &proc[NPROC]; p++) {
+#if SCHED_POLICY == SCHED_POLICY_PRIO
+    int bestprio = -1;
+    struct proc *best = 0;
+
+    // Pass 1: scan all procs, read state/priority under their lock, release immediately
+    for (struct proc *p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
-      if(p->state == RUNNABLE) {
-        // Switch to chosen process.  It is the process's job
-        // to release its lock and then reacquire it
-        // before jumping back to us.
+      if (p->state == RUNNABLE && p->priority > bestprio) {
+        bestprio = p->priority;
+        best = p;                 //  remember the pointer; don't keep lock
+      }
+      release(&p->lock);
+    }
+
+    // Pass 2: if we found a candidate, lock it again and verify it's still RUNNABLE
+    if (best) {
+      acquire(&best->lock);
+      if (best->state == RUNNABLE) {
+        best->state = RUNNING;
+        c->proc = best;
+        swtch(&c->context, &best->context);
+        c->proc = 0;
+      }
+      release(&best->lock);
+    }
+
+#elif SCHED_POLICY == SCHED_POLICY_RR
+    // stock xv6 round-robin
+    for (struct proc *p = proc; p < &proc[NPROC]; p++) {
+      acquire(&p->lock);
+      if (p->state == RUNNABLE) {
         p->state = RUNNING;
         c->proc = p;
         swtch(&c->context, &p->context);
-
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
         c->proc = 0;
       }
       release(&p->lock);
     }
+#else
+# error "SCHED_POLICY must be SCHED_POLICY_PRIO or SCHED_POLICY_RR"
+#endif
   }
 }
+
 
 // Switch to scheduler.  Must hold only p->lock
 // and have changed proc->state. Saves and restores
