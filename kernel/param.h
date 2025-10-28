@@ -16,4 +16,9 @@
 #define SCHED_POLICY_RR    0
 #define SCHED_POLICY_PRIO  1
 #define SCHED_POLICY SCHED_POLICY_PRIO
+// Aging config
+#define AGING_ENABLED       1       
+#define AGING_INTERVAL_TCK  25         // every 25 ticks of waiting = +1 effective prio
+
+
 //enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };

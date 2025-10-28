@@ -454,25 +454,34 @@ scheduler(void)
     intr_on();
 
 #if SCHED_POLICY == SCHED_POLICY_PRIO
-    int bestprio = -1;
+    //priority scheduler
     struct proc *best = 0;
+    int best_eff = -2147483647;     //  -INF
+    uint now = ticks;               // same units as readytime
 
-    // Pass 1: scan all procs then  read state/priority under their lock then release immediately
+    // Pass 1: scan every proc then compute effective priority then remember best
     for (struct proc *p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
-      if (p->state == RUNNABLE && p->priority > bestprio) {
-        bestprio = p->priority;
-        best = p;                 //  remember the pointer; don't keep lock
+      if (p->state == RUNNABLE) {
+        int eff = p->priority;
+#if AGING_ENABLED
+        uint age = now - p->readytime;              // ticks waited in ready queue
+        eff += age / AGING_INTERVAL_TCK;            // boost
+        if (eff > MAXPRIO) eff = MAXPRIO;           // clamp
+#endif
+        if (best == 0 || eff > best_eff) {
+          best = p;
+          best_eff = eff;
+        }
       }
       release(&p->lock);
     }
 
-    // Pass 2: if found a candidate then lock it again and verify it's still RUNNABLE
+    // Pass 2: lock best and run it (if  runnable)
     if (best) {
       acquire(&best->lock);
       if (best->state == RUNNABLE) {
         best->state = RUNNING;
-        best->readytime = ticks;
         c->proc = best;
         swtch(&c->context, &best->context);
         c->proc = 0;
@@ -481,23 +490,24 @@ scheduler(void)
     }
 
 #elif SCHED_POLICY == SCHED_POLICY_RR
-    // xv6 round-robin
+    //  xv6 round-robin 
     for (struct proc *p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
       if (p->state == RUNNABLE) {
         p->state = RUNNING;
-        p->readytime = ticks;
         c->proc = p;
         swtch(&c->context, &p->context);
         c->proc = 0;
       }
       release(&p->lock);
     }
+
 #else
 # error "SCHED_POLICY must be SCHED_POLICY_PRIO or SCHED_POLICY_RR"
 #endif
   }
 }
+
 
 
 // Switch to scheduler.  Must hold only p->lock
