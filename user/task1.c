@@ -13,7 +13,8 @@ int main(void)
     {
         printf("child inherited priority: %d\n", getpriority()); // expect 17
         printf("\nExec ps to print all process info\n\n");
-        exec("ps", (char *[]){"ps", 0});
+        char *argv[] = {"ps",0};
+        exec("ps", argv);
         printf("exec ps failed\n");
         exit(0);
     }

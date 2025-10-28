@@ -139,6 +139,7 @@ UPROGS=\
 	$U/_matmul\
 	$U/_task1\
 	$U/_task2\
+        $U/_ps\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

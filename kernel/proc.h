@@ -106,5 +106,6 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debug
   int priority;
+  uint64 readytime;
 
 };

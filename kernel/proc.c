@@ -6,6 +6,7 @@
 #include "proc.h"
 #include "defs.h"
 #include "pstat.h"
+extern uint ticks;
 
 struct cpu cpus[NCPU];
 
@@ -247,6 +248,7 @@ userinit(void)
   p->cwd = namei("/");
 
   p->state = RUNNABLE;
+  p->readytime = ticks;
 
   release(&p->lock);
 }
@@ -320,6 +322,7 @@ fork(void)
 
   acquire(&np->lock);
   np->state = RUNNABLE;
+  p->readytime = ticks;
   release(&np->lock);
 
   return pid;
@@ -454,7 +457,7 @@ scheduler(void)
     int bestprio = -1;
     struct proc *best = 0;
 
-    // Pass 1: scan all procs, read state/priority under their lock, release immediately
+    // Pass 1: scan all procs then  read state/priority under their lock then release immediately
     for (struct proc *p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
       if (p->state == RUNNABLE && p->priority > bestprio) {
@@ -464,11 +467,12 @@ scheduler(void)
       release(&p->lock);
     }
 
-    // Pass 2: if we found a candidate, lock it again and verify it's still RUNNABLE
+    // Pass 2: if found a candidate then lock it again and verify it's still RUNNABLE
     if (best) {
       acquire(&best->lock);
       if (best->state == RUNNABLE) {
         best->state = RUNNING;
+        best->readytime = ticks;
         c->proc = best;
         swtch(&c->context, &best->context);
         c->proc = 0;
@@ -477,11 +481,12 @@ scheduler(void)
     }
 
 #elif SCHED_POLICY == SCHED_POLICY_RR
-    // stock xv6 round-robin
+    // xv6 round-robin
     for (struct proc *p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
       if (p->state == RUNNABLE) {
         p->state = RUNNING;
+        p->readytime = ticks;
         c->proc = p;
         swtch(&c->context, &p->context);
         c->proc = 0;
@@ -529,6 +534,7 @@ yield(void)
   struct proc *p = myproc();
   acquire(&p->lock);
   p->state = RUNNABLE;
+  p->readytime = ticks;
   sched();
   release(&p->lock);
 }
@@ -597,6 +603,7 @@ wakeup(void *chan)
       acquire(&p->lock);
       if(p->state == SLEEPING && p->chan == chan) {
         p->state = RUNNABLE;
+        p->readytime = ticks;
       }
       release(&p->lock);
     }
@@ -618,6 +625,7 @@ kill(int pid)
       if(p->state == SLEEPING){
         // Wake process from sleep().
         p->state = RUNNABLE;
+        p->readytime = ticks;
       }
       release(&p->lock);
       return 0;
@@ -705,6 +713,7 @@ procinfo(uint64 addr)
     procinfo.state = p->state;
     procinfo.size = p->sz;
     procinfo.priority = p->priority;
+    procinfo.readytime[1] = p ->readytime;
     if (p->parent)
       procinfo.ppid = (p->parent)->pid;
     else
