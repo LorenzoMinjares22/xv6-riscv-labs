@@ -38,18 +38,31 @@ sys_wait(void)
   return wait(p);
 }
 
+ 
+    
 uint64
 sys_sbrk(void)
 {
-  int addr;
   int n;
+  struct proc *p = myproc();
 
   if(argint(0, &n) < 0)
     return -1;
-  addr = myproc()->sz;
-  if(growproc(n) < 0)
-    return -1;
-  return addr;
+
+  uint64 oldsz = p->sz;
+  uint64 newsz = oldsz;
+
+  if(n > 0){
+    // Lazy allocation: just grow virtual size
+    p->sz = oldsz + n;
+
+  } else if(n < 0){
+    // Shrink: actually free mapped pages
+    newsz = uvmdealloc(p->pagetable, oldsz, oldsz + n);
+    p->sz = newsz;
+  }
+
+  return oldsz; //  returns old break
 }
 
 uint64
