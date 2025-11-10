@@ -247,19 +247,24 @@ uvmalloc(pagetable_t pagetable, uint64 oldsz, uint64 newsz)
 // newsz.  oldsz and newsz need not be page-aligned, nor does newsz
 // need to be less than oldsz.  oldsz can be larger than the actual
 // process size.  Returns the new process size.
+
 uint64
 uvmdealloc(pagetable_t pagetable, uint64 oldsz, uint64 newsz)
 {
-  if(newsz >= oldsz)
-    return oldsz;
+  if (newsz >= oldsz) return oldsz;
 
-  if(PGROUNDUP(newsz) < PGROUNDUP(oldsz)){
-    int npages = (PGROUNDUP(oldsz) - PGROUNDUP(newsz)) / PGSIZE;
-    uvmunmap(pagetable, PGROUNDUP(newsz), npages, 1);
+  uint64 a;
+  for (a = PGROUNDUP(newsz); a < PGROUNDUP(oldsz); a += PGSIZE) {
+    pte_t *pte = walk(pagetable, a, 0);
+    if (pte && (*pte & PTE_V)) {
+      uint64 pa = PTE2PA(*pte);
+      kfree((void*)pa);
+      *pte = 0;
+    } // if not mapped just skip (hole)
   }
-
   return newsz;
 }
+
 
 // Recursively free page-table pages.
 // All leaf mappings must already have been removed.
@@ -297,35 +302,41 @@ uvmfree(pagetable_t pagetable, uint64 sz)
 // physical memory.
 // returns 0 on success, -1 on failure.
 // frees any allocated pages on failure.
+
 int
 uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
 {
+  uint64 va;
   pte_t *pte;
-  uint64 pa, i;
+  uint64 pa;
   uint flags;
   char *mem;
 
-  for(i = 0; i < sz; i += PGSIZE){
-    if((pte = walk(old, i, 0)) == 0)
-      panic("uvmcopy: pte should exist");
-    if((*pte & PTE_V) == 0)
-      panic("uvmcopy: page not present");
+  for (va = 0; va < sz; va += PGSIZE) {
+    pte = walk(old, va, 0);
+    if (pte == 0)            // no PTE hole due to lazy alloc
+      continue;
+    if ((*pte & PTE_V) == 0)      // PTE exists but not mapped hole
+      continue;
+
     pa = PTE2PA(*pte);
     flags = PTE_FLAGS(*pte);
-    if((mem = kalloc()) == 0)
+    if ((mem = kalloc()) == 0)
       goto err;
-    memmove(mem, (char*)pa, PGSIZE);
-    if(mappages(new, i, PGSIZE, (uint64)mem, flags) != 0){
+    memmove(mem, (void*)pa, PGSIZE);
+    if (mappages(new, va, PGSIZE, (uint64)mem, flags) != 0) {
       kfree(mem);
       goto err;
     }
   }
   return 0;
 
- err:
-  uvmunmap(new, 0, i / PGSIZE, 1);
+err:
+  uvmunmap(new, 0, va/PGSIZE, 1);
   return -1;
 }
+
+
 
 // mark a PTE invalid for user access.
 // used by exec for the user stack guard page.
