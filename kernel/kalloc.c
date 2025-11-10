@@ -23,6 +23,20 @@ struct {
   struct run *freelist;
 } kmem;
 
+//hw4 freepmem prototype
+uint64
+freepmem(void) {
+  acquire(&kmem.lock);
+  uint64 pages = 0;
+  struct run *r = kmem.freelist;
+  while (r) {
+    pages++;
+    r = r->next;
+  }
+  release(&kmem.lock);
+  return pages * PGSIZE;
+}
+
 void
 kinit()
 {
