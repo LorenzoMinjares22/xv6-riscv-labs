@@ -288,11 +288,12 @@ freewalk(pagetable_t pagetable)
 
 // Free user memory pages,
 // then free page-table pages.
+//changed for hw4
 void
 uvmfree(pagetable_t pagetable, uint64 sz)
 {
   if(sz > 0)
-    uvmunmap(pagetable, 0, PGROUNDUP(sz)/PGSIZE, 1);
+   uvmdealloc(pagetable,sz,0);   // free only mapped pages, skip holes
   freewalk(pagetable);
 }
 
