@@ -113,3 +113,27 @@ sys_freepmem(void)
   uint64 pages = kfreepages_count();
   return pages * PGSIZE;
 }
+
+uint64
+sys_sem_init(void)
+{
+   return -1;
+}
+
+uint64                                                                                                                  
+sys_sem_destroy(void)                                                                                                      
+{                                                                                                                       
+   return -1;                                                                                                           
+}    
+
+uint64                                                                                                                  
+sys_sem_wait(void)                                                                                                      
+{                                                                                                                       
+   return -1;                                                                                                           
+}  
+
+uint64                                                                                                                  
+sys_sem_post(void)                                                                                                      
+{                                                                                                                       
+   return -1;                                                                                                           
+}      

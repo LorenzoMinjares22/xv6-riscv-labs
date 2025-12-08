@@ -1,3 +1,4 @@
+#include "kernel/types.h"
 struct stat;
 struct rtcdate;
 
@@ -43,3 +44,7 @@ int memcmp(const void *, const void *, uint);
 void *memcpy(void *, const void *, uint);
 void *mmap(void *addr, uint length, int prot, int flags, int fd, int offset); // HOMEWORK 5, mmap and munmap
 int   munmap(void *addr, uint length);  // HOMEWORK 5, mmap and munmap
+int sem_init(sem_t *sem, int pshared, unsigned int value);
+int sem_destroy(sem_t *sem);
+int sem_wait(sem_t *sem);
+int sem_post(sem_t *sem);
