@@ -112,6 +112,11 @@ void dealloc_mmr_listid(int);
 void            mmrlistinit(void);
 // end of HOMEWORK 5, mmap and munmap
 
+//Semaphore
+void seminit(void);
+int semalloc(void);
+void semdealloc(int idx);
+
 // swtch.S
 void            swtch(struct context*, struct context*);
 

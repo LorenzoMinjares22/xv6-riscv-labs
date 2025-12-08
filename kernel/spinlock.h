@@ -1,4 +1,4 @@
-#include kernel/param.h
+#include "param.h"
 
 // Mutual exclusion lock.
 struct spinlock {
