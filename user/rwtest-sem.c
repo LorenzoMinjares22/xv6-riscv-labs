@@ -18,14 +18,52 @@ rw_t *rw;
 void
 reader(void)
 {
-  /* implement your semaphore logic for reader */
+  int i;
+  for (i = 0; i < READER_ITERS; i++) {
+    // entry section
+    sem_wait(&rw->mutex);
+    rw->readercount++;
+    if (rw->readercount == 1) {
+      // first reader locks out writers
+      sem_wait(&rw->wrt);
+    }
+    sem_post(&rw->mutex);
+
+    // critical section
+    int v = rw->value;
+    (void)v;  //fix warining of not used
+    
+    // printf("reader %d reading %d\n", getpid(), v);
+
+    // exit section
+    sem_wait(&rw->mutex);
+    rw->readercount--;
+    if (rw->readercount == 0) {
+      
+      sem_post(&rw->wrt);
+    }
+    sem_post(&rw->mutex);
+  }
+
+  exit(0);
 }
+
 
 void
 writer(void)
 {
-  /* implement your semaphore logic for writer */
+  int i;
+  for (i = 0; i < WRITER_ITERS; i++) {
+    sem_wait(&rw->wrt);      // exclusive access
+    rw->value++;             
+   
+    // printf("writer %d writing, value=%d\n", getpid(), rw->value);
+    sem_post(&rw->wrt);     
+  }
+
+  exit(0);
 }
+
 
 int
 main(int argc, char *argv[])
