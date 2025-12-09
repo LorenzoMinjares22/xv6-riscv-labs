@@ -33,7 +33,7 @@ reader(void)
     int v = rw->value;
     (void)v;  //fix warining of not used
     
-    // printf("reader %d reading %d\n", getpid(), v);
+    printf("reader %d reading %d\n", getpid(), v);
 
     // exit section
     sem_wait(&rw->mutex);
@@ -57,7 +57,7 @@ writer(void)
     sem_wait(&rw->wrt);      // exclusive access
     rw->value++;             
    
-    // printf("writer %d writing, value=%d\n", getpid(), rw->value);
+    printf("writer %d writing, value=%d\n", getpid(), rw->value);
     sem_post(&rw->wrt);     
   }
 
